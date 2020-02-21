@@ -1,0 +1,33 @@
+Tifpath = 'StageGMM4_2020_SA4CD/Data/Paracou_125MHz/geo5Md3iHV_t4-7_NCI7_lkLcl3-5-t7_lkRgn9-15.tif'
+import os 
+import sys
+
+import numpy
+
+import matplotlib.pyplot as plt
+
+from osgeo import gdal
+
+print(sys.version)
+
+gdal.UseExceptions()
+img = gdal.Open(Tifpath)
+
+img_band = img.GetRasterBand(1)
+img_rows = img.RasterYSize
+img_cols = img.RasterXSize
+img_array = img_band.ReadsAsArray(0,0,img_cols,img_rows)
+
+
+outData = img_array
+outdata = np.where((outData > 1), (1), outData)
+outData = np.where((outData < 0), (0) , outData)
+img_array = None
+
+
+outData = ((np.absolute(outData)*255.0 ) + 0.5).astype(int)
+
+print(outData)
+ 
+
+ 

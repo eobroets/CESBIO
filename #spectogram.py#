@@ -1,0 +1,23 @@
+ximport matplotlib.pyplot as plt
+import numpy as np
+import scipy.signal as ss
+
+fs  = 1000
+amp = 2 * 0.5
+time = np.linspace(0,4,fs)
+2*np.cos(np.pi*f*time) 
+ftime = np.linspace(0,(4*fs)/2,fs//2)/4
+fy = np.fft.fft(y)[:len(y)//2]/len(y)
+
+plt.figure(figsize=(15,10))
+plt.subplot(2,2,1)
+plt.plot(time,y)
+plt.xlabel("time")
+plt.ylabel("sin()")
+plt.subplot(2,2,2)
+plt.xlabel("Frequency")
+plt.ylabel("..")
+plt.plot(ftime,np.abs(fy))
+plt.show()
+
+

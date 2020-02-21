@@ -11,7 +11,7 @@ from scipy import fftpack
 gdal.UseExceptions()
 ds = gdal.Open(Tifpath)
 
-ds_band = np.array(ds.GetRasterBand(1).ReadAsArray())
+ds_band = np.array(ds.GetRasterBand(2).ReadAsArray())
 snippet = ds_band[400,:]
 print(ds_band.shape)
 plt.figure(figsize=(16,8))
