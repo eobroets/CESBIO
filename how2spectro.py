@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 #>>> observation time config:
 Tobs = 60. # Total observation period (sec)
 fs = 50. # Sampling frequency (Hz)
+print(1/fs)
 N = Tobs/(1/fs) # Nb points
 print (N), " <<< Nb of points "
 d1t = np.arange(N)/float(fs) # time axis 
@@ -66,7 +67,7 @@ plt.xlabel('Time [sec]')
 plt.ylim(0,2*fMx)
 fig2.show()
 
-raw_input()
+#raw_input()
 #}}} <<< EoDemo
 
 
