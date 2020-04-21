@@ -44,6 +44,7 @@ class temp_lib:
         self._multiplier = 10
         self._nwin = 20
         self._w = 6
+        self._d1f = None
 
     def extract_band(self, interval = None):
 
@@ -106,7 +107,7 @@ class temp_lib:
         conv = np.ones(n)
         self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
 
-    def spectrogram(self, name_win, n_win = None, plot = True, subplot = False):
+    def spectrogram(self, name_win, n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
         '''
         
         Plots the spectrogram of ds_band using the windowed Fourier transform, eventually returns spectrogram as well.
@@ -117,7 +118,10 @@ class temp_lib:
 
         
         '''
-
+        if vmax == None:
+            vmax = 50
+        if multiplier != None:
+            self._multiplier = multiplier 
         if n_win == None:
             n_win = int(len(self._ds_band)/(self._nwin))
         if name_win == "tukey":
@@ -132,7 +136,7 @@ class temp_lib:
         
             plt.title("Spectrogram with {0} type window and size of window = {1}".format(name_win, n_win))
             
-            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z,vmax = 0.1* self._multiplier)
+            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z,vmax = vmax)
             plt.ylabel('[Hz]')
             plt.xlabel('[m]')
             plt.colorbar()
@@ -141,18 +145,19 @@ class temp_lib:
         
 
 
-    def cross_spectro(self, other):
+    def cross_spectro(self, other, vmax = None):
         '''
         Calculates either the product or the difference between the computed spectrograms of two ds_bands (signals)
         Assuming that the spectrograms are computed
         
         '''
-        
+        if vmax == None:
+            vmax = 50
         plt.figure(figsize=(15,4))
             
         plt.title("Cross spectrogram (product)")
                 
-        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z), vmax = 0.1*self._multiplier)
+        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z), vmax = vmax)
         plt.ylabel('[Hz]')
         plt.xlabel('[m]')
         plt.colorbar()
@@ -164,16 +169,16 @@ class temp_lib:
         '''
         Todo
         '''
-        if w != None:
-            self._w = w
+        if w == None:
+            w = self._w
         if multiplier != None:
             self._multiplier = multiplier
 
         d1fmax = np.max(abs(self._TF))
         self._d1f = np.linspace(d1fmax, d1fmax*10, 200)
-        widths = self._w*self._fs /(2*self._d1f * np.pi)
+        widths = w*self._fs /(2*self._d1f * np.pi)
 
-        self._cwt = cwt(self._ds_band, morlet2, widths, w = self._w) * self._multiplier
+        self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
 
         if plot:
             plt.figure(figsize = (15,4))
