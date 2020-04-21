@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import fftpack
 from scipy import signal as ss
+from how2spectro_Morlet2 import morlet2
+from how2spectro_Morlet2 import cwt
 
 class temp_lib:
     """
@@ -26,19 +28,22 @@ class temp_lib:
         self._s = 5 # 1 pixel corresponds to 5 km 
         self._Ny, self._Nx = np.shape(self._image)
 
-        self._x = np.linspace(0, self._Nx*self._s, self._Nx)
-        self._y = np.linspace(0, self._Ny*self._s, self._Ny)
+
 
         self._interval = [712, 728]
         self.extract_band(self._interval)
 
         self._Sobs = self._Nx * self._s # Total spatial observation
         self._fs = self._Nx / self._Sobs # sampling frequency
+
+        self._x = np.arange(self._Nx)/float(self._fs)
+        self._y = np.arange(self._Ny)/float(self._fs)
+
         self._f = np.linspace(0, self._Sobs*self._fs, self._Nx // 2) / self._Sobs
         self._TF = fftpack.fft(self._ds_band)[:self._Nx // 2] / self._Nx
         self._multiplier = 10
         self._nwin = 20
-
+        self._w = 6
 
     def extract_band(self, interval = None):
 
@@ -155,3 +160,34 @@ class temp_lib:
         ##### TODO plot difference
         pass
 
+    def cwt(self, w  = None, multiplier = None, plot = True):
+        '''
+        Todo
+        '''
+        if w != None:
+            self._w = w
+        if multiplier != None:
+            self._multiplier = multiplier
+
+        d1fmax = np.max(abs(self._TF))
+        self._d1f = np.linspace(d1fmax, d1fmax*10, 200)
+        widths = self._w*self._fs /(2*self._d1f * np.pi)
+
+        self._cwt = cwt(self._ds_band, morlet2, widths, w = self._w) * self._multiplier
+
+        if plot:
+            plt.figure(figsize = (15,4))
+            plt.pcolormesh(self._x, self._d1f, np.abs(self._cwt), cmap = 'viridis', vmax = 10)
+            plt.colorbar()
+            plt.title("cwt")
+            plt.show
+        
+    def xwt(self, other):
+        '''todo'''
+
+        plt.figure(figsize = (15,4))
+        xwt = np.abs(self._cwt * np.conj(other._cwt))
+        plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 10)
+        plt.colorbar()
+        plt.title("xwt")
+        plt.show()
