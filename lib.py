@@ -20,20 +20,24 @@ class temp_lib:
 
 
     def __init__(self, image):
+
         # Image is a matrix M x N
-        self._image = image[:,:-30]
+        self._image = image
         self._s = 5 # 1 pixel corresponds to 5 km 
         self._Ny, self._Nx = np.shape(self._image)
+
         self._x = np.linspace(0, self._Nx*self._s, self._Nx)
         self._y = np.linspace(0, self._Ny*self._s, self._Ny)
+
         self._interval = [712, 728]
         self.extract_band(self._interval)
+
         self._Sobs = self._Nx * self._s # Total spatial observation
         self._fs = self._Nx / self._Sobs # sampling frequency
         self._f = np.linspace(0, self._Sobs*self._fs, self._Nx // 2) / self._Sobs
         self._TF = fftpack.fft(self._ds_band)[:self._Nx // 2] / self._Nx
-
-
+        self._multiplier = 10
+        self._nwin = 20
 
 
     def extract_band(self, interval = None):
@@ -97,7 +101,7 @@ class temp_lib:
         conv = np.ones(n)
         self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
 
-    def spectrogram(self, name_win, n_win = None, plot = True, subplot = False, return_spectro = False):
+    def spectrogram(self, name_win, n_win = None, plot = True, subplot = False):
         '''
         
         Plots the spectrogram of ds_band using the windowed Fourier transform, eventually returns spectrogram as well.
@@ -105,25 +109,25 @@ class temp_lib:
         Parameters:
         TODO
 
-        return_spectro: boolean; if true returns the outpout of scipy.signal.spectrogram
+
         
         '''
 
         if n_win == None:
-            n_win = int(len(self._ds_band)/(20))
+            n_win = int(len(self._ds_band)/(self._nwin))
         if name_win == "tukey":
             win = ss.get_window((name_win, 0.3), n_win)
         else:
             win = ss.get_window((name_win), n_win)
         self._spectro_f, self._spectro_t, self._spectro_Z = ss.spectrogram(self._ds_band, self._fs , nperseg = n_win, window = win, noverlap=n_win/4., axis=-1, mode='psd')
-
+        self._spectro_Z = self._spectro_Z * self._multiplier
         if plot:
             if not subplot:
                 plt.figure(figsize=(15,4))
         
             plt.title("Spectrogram with {0} type window and size of window = {1}".format(name_win, n_win))
             
-            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z,vmax = 0.5)
+            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z,vmax = 0.1* self._multiplier)
             plt.ylabel('[Hz]')
             plt.xlabel('[m]')
             plt.colorbar()
@@ -143,10 +147,11 @@ class temp_lib:
             
         plt.title("Cross spectrogram (product)")
                 
-        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z),vmax = 0.5)
+        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z), vmax = 0.1*self._multiplier)
         plt.ylabel('[Hz]')
         plt.xlabel('[m]')
         plt.colorbar()
         plt.show()
         ##### TODO plot difference
         pass
+
