@@ -29,7 +29,6 @@ class temp_lib:
         self._Ny, self._Nx = np.shape(self._image)
 
 
-
         self._interval = [712, 728]
         self.extract_band(self._interval)
 
@@ -71,7 +70,7 @@ class temp_lib:
         '''
         plt.figure(figsize = (10,12))
         plt.title("TODO")
-        plt.pcolormesh(self._y, self._x, np.log(self._image)*10, vmin = -40, vmax = 0)
+        plt.pcolormesh(self._x, self._y, np.log(self._image)*10, vmin = -40, vmax = 0)
 
         plt.show()
 
@@ -165,34 +164,55 @@ class temp_lib:
         ##### TODO plot difference
         pass
 
-    def cwt(self, w  = None, multiplier = None, plot = True):
+    def cwt(self, w  = None, multiplier = None, plot = True, vmax = None):
         '''
         Todo
         '''
+        if vmax == None:
+            vmax = 0.1* self._multiplier
         if w == None:
             w = self._w
         if multiplier != None:
             self._multiplier = multiplier
 
         d1fmax = np.max(abs(self._TF))
-        self._d1f = np.linspace(d1fmax, d1fmax*10, 200)
+        self._d1f = np.linspace(0, 3*d1fmax, 200)
         widths = w*self._fs /(2*self._d1f * np.pi)
+
+        #widths = w * self._fs /(2* self._f * np.pi)
 
         self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
 
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._d1f, np.abs(self._cwt), cmap = 'viridis', vmax = 10)
+            plt.pcolormesh(self._x, self._d1f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
             plt.colorbar()
             plt.title("cwt")
             plt.show
         
-    def xwt(self, other):
+    def xwt(self, other, vmax = None):
         '''todo'''
-
+        if vmax == None:
+            vmax = 0.1* self._multiplier
         plt.figure(figsize = (15,4))
         xwt = np.abs(self._cwt * np.conj(other._cwt))
-        plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 10)
+        plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = vmax)
         plt.colorbar()
         plt.title("xwt")
         plt.show()
+
+
+# class normalised_lib(temp_lib):
+
+#     def __init__(self, image, normaliser):
+
+#         image = self.normalise(image, normaliser )
+#         temp_lib.__init__(self, image)
+
+#     def normalise(self, image, normaliser):
+#         Ny, Nx = np.shape(image)
+#         new_image = np.zeros((Ny,Nx))
+#         for i in range(Ny):
+#             line = image[i,:]
+#             new_image[i,:] = line/normaliser
+#         return new_image
