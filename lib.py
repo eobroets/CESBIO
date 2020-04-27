@@ -65,14 +65,19 @@ class temp_lib:
         else:
             raise ValueError
 
-    def plot_image(self):
+    def plot_image(self, other):
         '''
         Plots the image in desibel using matplotlib
         '''
-        plt.figure(figsize = (10,12))
-        plt.title("TODO")
+        plt.figure(figsize = (12,9))
+        if other != None:
+            plt.subplot(2,2,1)
+        plt.title("Image")
         plt.pcolormesh(self._x, self._y, np.log10(self._image)*10, vmin = -40, vmax = 0)
-
+        if other != None:
+            plt.subplot(2,2,2)
+        plt.title("Image")
+        plt.pcolormesh(other._x, other._y, np.log10(other._image)*10, vmin = -40, vmax = 0)
         plt.show()
 
 
@@ -120,7 +125,7 @@ class temp_lib:
         
         '''
         if vmax == None:
-            vmax = 50
+            vmax = 1 * self._multiplier
         if multiplier != None:
             self._multiplier = multiplier 
         if n_win == None:
@@ -238,7 +243,7 @@ class temp_lib:
             plt.figure(figsize = (15,4))
             plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
             plt.colorbar()
-            plt.title("cwt")
+            plt.title("xwt")
             plt.show
         #spectrogram
 
