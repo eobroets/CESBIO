@@ -44,6 +44,7 @@ class temp_lib:
         self._nwin = 20
         self._w = 6
         self._d1f = None
+        self._cwt = None
 
     def extract_band(self, interval = None):
 
@@ -70,7 +71,7 @@ class temp_lib:
         '''
         plt.figure(figsize = (10,12))
         plt.title("TODO")
-        plt.pcolormesh(self._x, self._y, np.log(self._image)*10, vmin = -40, vmax = 0)
+        plt.pcolormesh(self._x, self._y, np.log10(self._image)*10, vmin = -40, vmax = 0)
 
         plt.show()
 
@@ -85,9 +86,10 @@ class temp_lib:
         plt.figure(figsize = (20,10))
         plt.subplot(2,2,1)
         plt.title("ds_band")
-        plt.plot(self._x, np.log(self._ds_band)*10)
+        plt.plot(self._x, np.log10(self._ds_band)*10)
         if other != None:
-            plt.plot(self._x, np.log(other._ds_band)*10)
+            plt.plot(self._x, np.log10(other._ds_band)*10)
+
         plt.subplot(2,2,2)
         plt.title("Fourier transform of ds_band")
         plt.plot(self._f, self._TF)
@@ -106,7 +108,7 @@ class temp_lib:
         conv = np.ones(n)
         self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
 
-    def spectrogram(self, name_win, n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
+    def spectrogram(self, name_win = "tukey", n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
         '''
         
         Plots the spectrogram of ds_band using the windowed Fourier transform, eventually returns spectrogram as well.
@@ -175,32 +177,72 @@ class temp_lib:
         if multiplier != None:
             self._multiplier = multiplier
 
-        d1fmax = np.max(abs(self._TF))
-        self._d1f = np.linspace(0, 3*d1fmax, 200)
-        widths = w*self._fs /(2*self._d1f * np.pi)
+        #d1fmax = np.max(abs(self._TF))
+        #self._d1f = np.linspace(0, 3*d1fmax, 200)
+        #widths = w*self._fs /(self._d1f * np.pi)
 
-        #widths = w * self._fs /(2* self._f * np.pi)
+        widths = w * self._fs /(2* self._f * np.pi)
 
         self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
 
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._d1f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
+            plt.pcolormesh(self._x, self._f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
             plt.colorbar()
             plt.title("cwt")
             plt.show
         
-    def xwt(self, other, vmax = None):
+    def xwt(self, other, w = 10, vmax = None):
         '''todo'''
         if vmax == None:
             vmax = 0.1* self._multiplier
+        #if self._cwt == None:
+        #    self.cwt(w, plot = False)
+        #if other._cwt == None:
+        #    other.cwt(w, plot = False)
         plt.figure(figsize = (15,4))
+
         xwt = np.abs(self._cwt * np.conj(other._cwt))
-        plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = vmax)
+        plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = vmax)
         plt.colorbar()
         plt.title("xwt")
         plt.show()
 
+    def simulate_deforestation(self, location, mu = None, sigma = None, plot = True):
+        '''simulates deforestation
+        location: where the deforestation should take place
+        '''
+        if mu == None:
+            mu = 1e-2
+        if sigma == None:
+            sigma = 2e-4
+        location[0] = location[0] // self._s
+        location[1] = location[1] // self._s
+        length = location[1] - location[0]
+        deforst = (np.random.randn(length)*sigma + mu)
+        self._deforestated_band = np.copy(self._ds_band)
+        self._deforestated_band[location[0]:location[1]] = np.copy(deforst)
+        if plot == True:
+            plt.figure(figsize = (12,5))
+            plt.title("dB of original band and with simulated deforestation")
+            plt.plot(self._x, np.log10(self._ds_band)*10)
+            plt.plot(self._x, np.log10(self._deforestated_band)*10)
+            plt.show()
+        w = self._w
+        widths = w * self._fs /(2* self._f * np.pi)
+        s_cwt = cwt(self._deforestated_band, morlet2, widths, w = w) * self._multiplier
+        self.cwt(plot = False)
+        xwt = np.abs(self._cwt * np.conj(s_cwt))
+
+        if plot:
+            plt.figure(figsize = (15,4))
+            plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
+            plt.colorbar()
+            plt.title("cwt")
+            plt.show
+        #spectrogram
+
+        #cwt
 
 # class normalised_lib(temp_lib):
 
