@@ -129,7 +129,7 @@ class temp_lib:
         if multiplier != None:
             self._multiplier = multiplier 
         if n_win == None:
-            n_win = int(len(self._ds_band)/(self._nwin))
+            n_win = self._nwin
         if name_win == "tukey":
             win = ss.get_window((name_win, 0.3), n_win)
         else:
@@ -158,7 +158,7 @@ class temp_lib:
         
         '''
         if vmax == None:
-            vmax = 50
+            vmax = 2
         plt.figure(figsize=(15,4))
             
         plt.title("Cross spectrogram (product)")
@@ -185,7 +185,7 @@ class temp_lib:
         #d1fmax = np.max(abs(self._TF))
         #self._d1f = np.linspace(0, 3*d1fmax, 200)
         #widths = w*self._fs /(self._d1f * np.pi)
-
+        #self._f = self._f / 3   
         widths = w * self._fs /(2* self._f * np.pi)
 
         self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
@@ -207,8 +207,9 @@ class temp_lib:
         #    other.cwt(w, plot = False)
         plt.figure(figsize = (15,4))
 
-        xwt = np.abs(self._cwt * np.conj(other._cwt))
-        plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = vmax)
+        xwt = (self._cwt * np.conj(other._cwt))
+        self._xwt = xwt
+        plt.pcolormesh(self._x, self._f, np.abs(xwt), cmap = 'viridis', vmax = vmax)
         plt.colorbar()
         plt.title("xwt")
         plt.show()
