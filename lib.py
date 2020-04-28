@@ -185,7 +185,7 @@ class temp_lib:
         #d1fmax = np.max(abs(self._TF))
         #self._d1f = np.linspace(0, 3*d1fmax, 200)
         #widths = w*self._fs /(self._d1f * np.pi)
-        #self._f = self._f / 3   
+        self._f = self._f / 6   
         widths = w * self._fs /(2* self._f * np.pi)
 
         self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
@@ -195,7 +195,7 @@ class temp_lib:
             plt.pcolormesh(self._x, self._f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
             plt.colorbar()
             plt.title("cwt")
-            plt.show
+            plt.show()
         
     def xwt(self, other, w = 10, vmax = None):
         '''todo'''
