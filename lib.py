@@ -8,7 +8,7 @@ from how2spectro_Morlet2 import cwt
 
 class temp_lib:
     """
-    Class used to perform spectral analysis
+    Class used for tutored project INSA 4 GMM
 
     Attributes:
 
@@ -16,7 +16,8 @@ class temp_lib:
     s :  integer - sampling ratio
     x, y : numpy ndarray  with respective shapes Nx et Ny
     fs : sampling frequency
-    ds_band : numpy ndarray of shape Nx  - > extracted band from the image    
+    ds_band : numpy ndarray of shape Nx  - > extracted band from the image  
+    f: frequency domain  
     """
 
 
@@ -43,8 +44,6 @@ class temp_lib:
         self._multiplier = 10
         self._nwin = 20
         self._w = 6
-        self._d1f = None
-        self._cwt = None
 
     def extract_band(self, interval = None):
 
@@ -112,12 +111,12 @@ class temp_lib:
         '''
         conv = np.ones(n)
         self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
-
+        # should change fs?
     def spectrogram(self, name_win = "tukey", n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
         '''
         
         Plots the spectrogram of ds_band using the windowed Fourier transform, eventually returns spectrogram as well.
-
+        Z is multiplied by self._multiplier to ensure values > 1
         Parameters:
         TODO
 
@@ -155,6 +154,7 @@ class temp_lib:
         '''
         Calculates either the product or the difference between the computed spectrograms of two ds_bands (signals)
         Assuming that the spectrograms are computed
+        Z is multiplied by self._multiplier to ensure values > 1
         
         '''
         if vmax == None:
@@ -168,12 +168,13 @@ class temp_lib:
         plt.xlabel('[m]')
         plt.colorbar()
         plt.show()
-        ##### TODO plot difference
+    
         pass
 
     def cwt(self, w  = None, multiplier = None, plot = True, vmax = None):
         '''
-        Todo
+        Computes the CWT of self._ds_band and plots the corresponding spectrogram
+        the cwt is multiplied by self._multiplier to ensure values > 1
         '''
         if vmax == None:
             vmax = 0.1* self._multiplier
@@ -182,11 +183,10 @@ class temp_lib:
         if multiplier != None:
             self._multiplier = multiplier
 
-        #d1fmax = np.max(abs(self._TF))
-        #self._d1f = np.linspace(0, 3*d1fmax, 200)
-        #widths = w*self._fs /(self._d1f * np.pi)
-        self._f = self._f / 6   
-        widths = w * self._fs /(2* self._f * np.pi)
+
+        freqs = self._f 
+        #freqs  = self._f / 6
+        widths = w * self._fs /(2* freqs * np.pi)
 
         self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
 
@@ -198,13 +198,12 @@ class temp_lib:
             plt.show()
         
     def xwt(self, other, w = 10, vmax = None):
-        '''todo'''
+        '''
+        Calculates and plots the cross wavelet transform of self._ds_band and other._ds_band
+        '''
         if vmax == None:
             vmax = 0.1* self._multiplier
-        #if self._cwt == None:
-        #    self.cwt(w, plot = False)
-        #if other._cwt == None:
-        #    other.cwt(w, plot = False)
+
         plt.figure(figsize = (15,4))
 
         xwt = (self._cwt * np.conj(other._cwt))
@@ -219,9 +218,9 @@ class temp_lib:
         location: where the deforestation should take place
         '''
         if mu == None:
-            mu = 1e-2
+            mu = 5e-2
         if sigma == None:
-            sigma = 2e-4
+            sigma = np.var(self._ds_band)
         location[0] = location[0] // self._s
         location[1] = location[1] // self._s
         length = location[1] - location[0]
@@ -245,22 +244,15 @@ class temp_lib:
             plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
             plt.colorbar()
             plt.title("xwt")
-            plt.show
-        #spectrogram
+            plt.show()
 
-        #cwt
 
-# class normalised_lib(temp_lib):
+############
+# How to use cwt and xwt:
 
-#     def __init__(self, image, normaliser):
-
-#         image = self.normalise(image, normaliser )
-#         temp_lib.__init__(self, image)
-
-#     def normalise(self, image, normaliser):
-#         Ny, Nx = np.shape(image)
-#         new_image = np.zeros((Ny,Nx))
-#         for i in range(Ny):
-#             line = image[i,:]
-#             new_image[i,:] = line/normaliser
-#         return new_image
+# IM1 = temp_lib(tifpath1)
+# IM2 = temp_lib(tifpath2)
+# w = 6
+# IM1.cwt(w = w, multiplier = 1)       
+# IM2.cwt(w = w, multiplier = 1)
+# IM1.xwt(IM2) 
