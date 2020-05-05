@@ -183,16 +183,16 @@ class temp_lib:
         if multiplier != None:
             self._multiplier = multiplier
 
-
-        freqs = self._f 
-        #freqs  = self._f / 6
-        widths = w * self._fs /(2* freqs * np.pi)
-
-        self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
-
+        w = 2.5 # scaling parameter for Morlet-based wavelet functions
+        fMx = 0.075 # fMax
+        d1f = np.linspace(1e-3,fMx, 200)
+        d1w = w*self._fs / (2*d1f*np.pi)
+        self._cwt = cwt(self._ds_band, morlet2, d1w, w=w)*self._multiplier
+        #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
+        self._d1f = d1f
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
+            plt.pcolormesh(self._x, d1f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
             plt.colorbar()
             plt.title("cwt")
             plt.show()
@@ -208,7 +208,7 @@ class temp_lib:
 
         xwt = (self._cwt * np.conj(other._cwt))
         self._xwt = xwt
-        plt.pcolormesh(self._x, self._f, np.abs(xwt), cmap = 'viridis', vmax = vmax)
+        plt.pcolormesh(self._x, self._d1f, np.abs(xwt), cmap = 'viridis', vmax = vmax)
         plt.colorbar()
         plt.title("xwt")
         plt.show()
@@ -233,15 +233,25 @@ class temp_lib:
             plt.plot(self._x, np.log10(self._ds_band)*10)
             plt.plot(self._x, np.log10(self._deforestated_band)*10)
             plt.show()
-        w = self._w
-        widths = w * self._fs /(2* self._f * np.pi)
-        s_cwt = cwt(self._deforestated_band, morlet2, widths, w = w) * self._multiplier
-        self.cwt(plot = False)
+        w = 2.5 # scaling parameter for Morlet-based wavelet functions
+        fMx = 0.075 # fMax
+        d1f = np.linspace(1e-3,fMx, 200)
+        d1w = w*self._fs / (2*d1f*np.pi)
+        s_cwt = cwt(self._deforestated_band, morlet2, d1w, w=w)*self._multiplier
+
+        #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
+        self._d1f = d1f
+        self.cwt(plot = True)
+        plt.figure(figsize = (15,4))
+        plt.pcolormesh(self._x, self._d1f, np.abs(s_cwt), cmap = 'viridis', vmax = 0.1 * self._multiplier)
+        plt.colorbar()
+        plt.title("cwt deforest")
+        plt.show()
         xwt = np.abs(self._cwt * np.conj(s_cwt))
 
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
+            plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
             plt.colorbar()
             plt.title("xwt")
             plt.show()
