@@ -102,7 +102,7 @@ class temp_lib:
         plt.show()
 
 
-    def decrease_resolution(self, n):
+    def decrease_resolution(self, n, other = False):
         '''
         Decreases the resolution using numpy.convolve and updates ds_band
         Reset by calling extract_band
@@ -111,6 +111,8 @@ class temp_lib:
         '''
         conv = np.ones(n)
         self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
+        if other == True:
+            self._deforestated_band =  np.convolve(conv, self._deforestated_band, mode = 'same') / n
         # should change fs?
     def spectrogram(self, name_win = "tukey", n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
         '''
@@ -213,7 +215,7 @@ class temp_lib:
         plt.title("xwt")
         plt.show()
 
-    def simulate_deforestation(self, location, mu = None, sigma = None, plot = True):
+    def simulate_deforestation(self, location, mu = None, sigma = None, plot = True, n = None):
         '''simulates deforestation
         location: where the deforestation should take place
         '''
@@ -227,12 +229,15 @@ class temp_lib:
         deforst = (np.random.randn(length)*sigma + mu)
         self._deforestated_band = np.copy(self._ds_band)
         self._deforestated_band[location[0]:location[1]] = np.copy(deforst)
+        if n != None:
+            self.decrease_resolution(n = n, other = True)
         if plot == True:
             plt.figure(figsize = (12,5))
             plt.title("dB of original band and with simulated deforestation")
             plt.plot(self._x, np.log10(self._ds_band)*10)
             plt.plot(self._x, np.log10(self._deforestated_band)*10)
             plt.show()
+
         w = 2.5 # scaling parameter for Morlet-based wavelet functions
         fMx = 0.075 # fMax
         d1f = np.linspace(1e-3,fMx, 200)
