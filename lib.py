@@ -79,7 +79,18 @@ class temp_lib:
         plt.pcolormesh(other._x, other._y, np.log10(other._image)*10, vmin = -40, vmax = 0)
         plt.show()
 
+    def plot_section(self, other = None):
 
+
+        plt.figure(figsize = (14,6))
+        plt.title("Section of the Paracou area")
+        plt.plot(self._x, np.log10(self._ds_band)*10, label = "Period 1")
+        if other != None:
+            plt.plot(self._x, np.log10(other._ds_band)*10, label = "Period 3")
+        plt.ylabel("dB")
+        plt.xlabel("m")
+        plt.legend()
+        plt.show()
     def plot_TF(self, other = None):
 
         '''
@@ -163,10 +174,10 @@ class temp_lib:
             vmax = 2
         plt.figure(figsize=(15,4))
             
-        plt.title("Cross spectrogram (product)")
+        plt.title("Spectrogram of the product between the two WFT")
                 
-        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z), vmax = vmax)
-        plt.ylabel('[Hz]')
+        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z),vmax = vmax)
+        plt.ylabel('frequency [Hz]')
         plt.xlabel('[m]')
         plt.colorbar()
         plt.show()
@@ -194,7 +205,7 @@ class temp_lib:
         self._d1f = d1f
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, d1f, np.abs(self._cwt), cmap = 'viridis', vmax = vmax)
+            plt.pcolormesh(self._x, d1f, np.abs(self._cwt), cmap = 'viridis')
             plt.colorbar()
             plt.title("cwt")
             plt.show()
@@ -204,15 +215,17 @@ class temp_lib:
         Calculates and plots the cross wavelet transform of self._ds_band and other._ds_band
         '''
         if vmax == None:
-            vmax = 0.1* self._multiplier
+            vmax = 0.3* self._multiplier
 
         plt.figure(figsize = (15,4))
 
         xwt = (self._cwt * np.conj(other._cwt))
         self._xwt = xwt
-        plt.pcolormesh(self._x, self._d1f, np.abs(xwt), cmap = 'viridis', vmax = vmax)
+        plt.pcolormesh(self._x, self._d1f, np.abs(xwt), cmap = 'viridis',vmax = vmax)
         plt.colorbar()
-        plt.title("xwt")
+        plt.title("Spectrogram based on XWT")
+        plt.xlabel("m")
+        plt.ylabel("scale (s)")
         plt.show()
 
     def simulate_deforestation(self, location, mu = None, sigma = None, plot = True, n = None):
@@ -227,7 +240,7 @@ class temp_lib:
         location[1] = location[1] // self._s
         length = location[1] - location[0]
         deforst = (np.random.randn(length)*sigma + mu)
-        self._deforestated_band = np.copy(self._ds_band)
+        self._deforestated_band = np.copy(self._ds_band)+(10*sigma*self._ds_band)
         self._deforestated_band[location[0]:location[1]] = np.copy(deforst)
         if n != None:
             self.decrease_resolution(n = n, other = True)
@@ -248,7 +261,7 @@ class temp_lib:
         self._d1f = d1f
         self.cwt(plot = True)
         plt.figure(figsize = (15,4))
-        plt.pcolormesh(self._x, self._d1f, np.abs(s_cwt), cmap = 'viridis', vmax = 0.1 * self._multiplier)
+        plt.pcolormesh(self._x, self._d1f, np.abs(s_cwt), cmap = 'viridis')
         plt.colorbar()
         plt.title("cwt deforest")
         plt.show()
@@ -256,9 +269,9 @@ class temp_lib:
 
         if plot:
             plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 0.1 * self._multiplier)
+            plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 0.3*self._multiplier)
             plt.colorbar()
-            plt.title("xwt")
+            plt.title("Spectrogram based on XWT")
             plt.show()
 
 
