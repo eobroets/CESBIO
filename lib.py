@@ -91,6 +91,23 @@ class temp_lib:
         plt.xlabel("m")
         plt.legend()
         plt.show()
+    def plot_sections(self, other = None):
+
+
+        plt.figure(figsize = (14,4))
+        plt.plot(self._x, np.log10(self._ds_band)*10, label = "Original signal")
+        if other.all() != None:
+            plt.plot(self._x, np.log10(other)*10, label = "Shifted signal")
+        plt.ylabel("dB")
+        plt.xlabel("m")
+        plt.legend()
+        plt.show()
+
+    def plot_diff(self, diff):
+        plt.figure(figsize = (14,4))
+        plt.plot(self._x, np.abs((diff)))
+        plt.xlabel("m")
+        plt.show()
     def plot_TF(self, other = None):
 
         '''
@@ -125,6 +142,15 @@ class temp_lib:
         if other == True:
             self._deforestated_band =  np.convolve(conv, self._deforestated_band, mode = 'same') / n
         # should change fs?
+    def decrease_resolution_v2(self,sig_in, n):
+        '''
+        Decreases the resolution using numpy.convolve and updates ds_band
+        Reset by calling extract_band
+        
+        
+        '''
+        conv = np.ones(n)
+        return  np.convolve(conv, sig_in, mode = 'same') / n
     def spectrogram(self, name_win = "tukey", n_win = None, plot = True, multiplier = None, vmax = None, subplot = False):
         '''
         
@@ -204,12 +230,39 @@ class temp_lib:
         #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
         self._d1f = d1f
         if plot:
-            plt.figure(figsize = (15,4))
+            plt.figure(figsize = (14,4))
             plt.pcolormesh(self._x, d1f, np.abs(self._cwt), cmap = 'viridis')
             plt.colorbar()
             plt.title("cwt")
             plt.show()
         
+    def cwt_v2(self, sig_in, w  = None, multiplier = None, plot = True, vmax = None):
+        '''
+        Computes the CWT of sig_in and plots the corresponding spectrogram
+        the cwt is multiplied by self._multiplier to ensure values > 1
+        '''
+        if vmax == None:
+            vmax = 0.1* self._multiplier
+        if w == None:
+            w = self._w
+        if multiplier != None:
+            self._multiplier = multiplier
+
+        #  w # scaling parameter for Morlet-based wavelet functions
+        fMx = 0.075 # fMax
+        d1f = np.linspace(1e-3,fMx, 200)
+        self._d1f = d1f
+
+        d1w = w*self._fs / (2*d1f*np.pi)
+        d1cwt = cwt(sig_in, morlet2, d1w, w=w)*self._multiplier
+        #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
+        return d1cwt
+    def plot_cwt(self, cwt_plot):
+        plt.figure(figsize = (16,4))
+        plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
+        plt.colorbar()
+        plt.title("cwt")
+        plt.show()
     def xwt(self, other, w = 10, vmax = None):
         '''
         Calculates and plots the cross wavelet transform of self._ds_band and other._ds_band
@@ -227,6 +280,27 @@ class temp_lib:
         plt.xlabel("m")
         plt.ylabel("scale (s)")
         plt.show()
+    def simulate_shift(self, s = None):
+        '''Applies a shift s* sigma to self._ds_band'''
+        sigma = np.var(self._ds_band)
+        return  np.copy(self._ds_band) + s*sigma*np.copy(self._ds_band)
+
+     
+    def simulate_deforestation_v2(self, location, mu = None, sigma = None, plot = True, n = None):
+        '''simulates deforestation
+        location: where the deforestation should take place
+        '''
+        if mu == None:
+            mu = 5e-2
+        if sigma == None:
+            sigma = np.var(self._ds_band)
+        location[0] = location[0] // self._s
+        location[1] = location[1] // self._s
+        length = location[1] - location[0]
+        deforst = (np.random.randn(length)*sigma + mu)
+        sim_deforst = np.copy(self._ds_band)
+        sim_deforst[location[0]:location[1]] = np.copy(deforst)
+        return sim_deforst   
 
     def simulate_deforestation(self, location, mu = None, sigma = None, plot = True, n = None):
         '''simulates deforestation
@@ -240,7 +314,7 @@ class temp_lib:
         location[1] = location[1] // self._s
         length = location[1] - location[0]
         deforst = (np.random.randn(length)*sigma + mu)
-        self._deforestated_band = np.copy(self._ds_band)+(10*sigma*self._ds_band)
+        self._deforestated_band = np.copy(self._ds_band)
         self._deforestated_band[location[0]:location[1]] = np.copy(deforst)
         if n != None:
             self.decrease_resolution(n = n, other = True)
