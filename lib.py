@@ -25,7 +25,7 @@ class temp_lib:
     def __init__(self, image):
 
         # Image is a matrix M x N
-        self._image = image
+        self._image = image[:,:-50]
         self._s = 5 # 1 pixel corresponds to 5 km 
         self._Ny, self._Nx = np.shape(self._image)
 
@@ -41,7 +41,7 @@ class temp_lib:
 
         self._f = np.linspace(0, self._Sobs*self._fs, self._Nx // 2) / self._Sobs
         self._TF = fftpack.fft(self._ds_band)[:self._Nx // 2] / self._Nx
-        self._multiplier = 10
+        self._multiplier = 1
         self._nwin = 20
         self._w = 6
 
@@ -180,7 +180,7 @@ class temp_lib:
         
             plt.title("Spectrogram with {0} type window and size of window = {1}".format(name_win, n_win))
             
-            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z,vmax = vmax)
+            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z)
             plt.ylabel('[Hz]')
             plt.xlabel('[m]')
             plt.colorbar()
@@ -188,21 +188,34 @@ class temp_lib:
                 plt.show()
         
 
-
-    def cross_spectro(self, other, vmax = None):
+    def plot_spectro(self, spect_plot):
+        plt.figure(figsize=(15,4))
+        plt.pcolormesh(self._spectro_t,self._spectro_f,spect_plot)
+        plt.ylabel('frequency [Hz]')
+        plt.xlabel('[m]')
+        plt.colorbar()
+        plt.show()
+    def cross_spectro(self, other, vmax = None, diff = True, prod = False):
         '''
         Calculates either the product or the difference between the computed spectrograms of two ds_bands (signals)
         Assuming that the spectrograms are computed
         Z is multiplied by self._multiplier to ensure values > 1
         
         '''
+        if prod == True:
+            diff = False
         if vmax == None:
-            vmax = 2
+            vmax = 3
         plt.figure(figsize=(15,4))
             
-        plt.title("Spectrogram of the product between the two WFT")
-                
-        plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z),vmax = vmax)
+        if diff == True:
+            plt.title("Spectrogram of the difference between the two WFT")
+            plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z - other._spectro_Z))
+            prod = False
+        if prod == True:
+            plt.title("Spectrogram of the product between the two WFT")
+            plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z))
+
         plt.ylabel('frequency [Hz]')
         plt.xlabel('[m]')
         plt.colorbar()
@@ -262,6 +275,7 @@ class temp_lib:
         plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
         plt.colorbar()
         plt.title("cwt")
+        plt.xlabel("m")
         plt.show()
     def xwt(self, other, w = 10, vmax = None):
         '''
