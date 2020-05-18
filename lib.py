@@ -271,7 +271,7 @@ class temp_lib:
         #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
         return d1cwt
     def plot_cwt(self, cwt_plot):
-        plt.figure(figsize = (16,4))
+        plt.figure(figsize = (15,4))
         plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
         plt.colorbar()
         plt.title("cwt")

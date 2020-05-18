@@ -81,7 +81,7 @@ class lib2:
     def plot_section(self, other = None):
 
 
-        plt.figure(figsize = (14,6))
+        plt.figure(figsize = (13,4))
         plt.title("Section of the Paracou area")
         plt.plot(self._x, np.log10(self._ds_band)*10, label = "Period 1")
         if other != None:
@@ -93,7 +93,7 @@ class lib2:
     def plot_sections(self, sig_in, sig_in2, label1 = None, label2 = None):
 
 
-        plt.figure(figsize = (14,4))
+        plt.figure(figsize = (13,4))
         if label1 == None:
             label1 = "Original signal"
         if label2 == None:
@@ -108,7 +108,7 @@ class lib2:
     def plot_signal(self, sig_in, title = None):
         if title == None:
             title = "Signal"
-        plt.figure(figsize = (14,4))
+        plt.figure(figsize = (13,4))
         plt.title(title)
         plt.plot(self._x, np.abs((sig_in)))
         plt.xlabel("m")
@@ -222,7 +222,7 @@ class lib2:
         return d1cwt
     def plot_cwt(self, cwt_plot, title = None, ylabel = None, vmax = None):
         
-        plt.figure(figsize = (16,4))
+        plt.figure(figsize = (15,4))
         if vmax == None:
             plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
         else:
