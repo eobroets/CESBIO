@@ -25,7 +25,7 @@ class lib2:
     def __init__(self, image):
 
         # Image is a matrix M x N
-        self._image = image[:,:-50]
+        self._image = image[:,:-5]
         self._s = 5 # 1 pixel corresponds to 5 km 
         self._Ny, self._Nx = np.shape(self._image)
 
