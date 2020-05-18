@@ -6,7 +6,7 @@ from scipy import signal as ss
 from how2spectro_Morlet2 import morlet2
 from how2spectro_Morlet2 import cwt
 
-class temp_lib:
+class lib2:
     """
     Class used for tutored project INSA 4 GMM
 
@@ -42,8 +42,6 @@ class temp_lib:
         self._f = np.linspace(0, self._Sobs*self._fs, self._Nx // 2) / self._Sobs
         self._TF = fftpack.fft(self._ds_band)[:self._Nx // 2] / self._Nx
         self._multiplier = 1
-        self._nwin = 20
-        self._w = 6
 
     def extract_band(self, interval = None):
 
@@ -61,6 +59,7 @@ class temp_lib:
                 ret = ret + self._image[i,:]
             ret = ret / (interval[1] - interval[0])
             self._ds_band = ret
+            return ret 
         else:
             raise ValueError
 
@@ -91,21 +90,27 @@ class temp_lib:
         plt.xlabel("m")
         plt.legend()
         plt.show()
-    def plot_sections(self, other = None):
+    def plot_sections(self, sig_in, sig_in2, label1 = None, label2 = None):
 
 
         plt.figure(figsize = (14,4))
-        plt.plot(self._x, np.log10(self._ds_band)*10, label = "Original signal")
-        if other.all() != None:
-            plt.plot(self._x, np.log10(other)*10, label = "Shifted signal")
+        if label1 == None:
+            label1 = "Original signal"
+        if label2 == None:
+            label2 = "Shifted signal"
+        plt.plot(self._x, np.log10(sig_in)*10, label = label1)
+        plt.plot(self._x, np.log10(sig_in2)*10, label = label2)
         plt.ylabel("dB")
         plt.xlabel("m")
         plt.legend()
         plt.show()
 
-    def plot_diff(self, diff):
+    def plot_signal(self, sig_in, title = None):
+        if title == None:
+            title = "Signal"
         plt.figure(figsize = (14,4))
-        plt.plot(self._x, np.abs((diff)))
+        plt.title(title)
+        plt.plot(self._x, np.abs((sig_in)))
         plt.xlabel("m")
         plt.show()
     def plot_TF(self, other = None):
@@ -129,20 +134,7 @@ class temp_lib:
             plt.plot(self._f, other._TF)
         plt.show()
 
-
-    def decrease_resolution(self, n, other = False):
-        '''
-        Decreases the resolution using numpy.convolve and updates ds_band
-        Reset by calling extract_band
-        
-        
-        '''
-        conv = np.ones(n)
-        self._ds_band = np.convolve(conv, self._ds_band, mode = 'same') / n
-        if other == True:
-            self._deforestated_band =  np.convolve(conv, self._deforestated_band, mode = 'same') / n
-        # should change fs?
-    def decrease_resolution_v2(self,sig_in, n):
+    def decrease_resolution(self,sig_in, n):
         '''
         Decreases the resolution using numpy.convolve and updates ds_band
         Reset by calling extract_band
@@ -157,35 +149,20 @@ class temp_lib:
         Plots the spectrogram of ds_band using the windowed Fourier transform, eventually returns spectrogram as well.
         Z is multiplied by self._multiplier to ensure values > 1
         Parameters:
-        TODO
-
-
-        
         '''
         if vmax == None:
             vmax = 1 * self._multiplier
         if multiplier != None:
             self._multiplier = multiplier 
         if n_win == None:
-            n_win = self._nwin
+            n_win = 57
         if name_win == "tukey":
             win = ss.get_window((name_win, 0.3), n_win)
         else:
             win = ss.get_window((name_win), n_win)
         self._spectro_f, self._spectro_t, self._spectro_Z = ss.spectrogram(self._ds_band, self._fs , nperseg = n_win, window = win, noverlap=n_win/4., axis=-1, mode='psd')
-        self._spectro_Z = self._spectro_Z * self._multiplier
-        if plot:
-            if not subplot:
-                plt.figure(figsize=(15,4))
-        
-            plt.title("Spectrogram with {0} type window and size of window = {1}".format(name_win, n_win))
-            
-            plt.pcolormesh(self._spectro_t,self._spectro_f, self._spectro_Z)
-            plt.ylabel('[Hz]')
-            plt.xlabel('[m]')
-            plt.colorbar()
-            if not subplot:
-                plt.show()
+        return self._spectro_Z * self._multiplier
+
         
 
     def plot_spectro(self, spect_plot):
@@ -195,6 +172,7 @@ class temp_lib:
         plt.xlabel('[m]')
         plt.colorbar()
         plt.show()
+
     def cross_spectro(self, other, vmax = None, diff = True, prod = False):
         '''
         Calculates either the product or the difference between the computed spectrograms of two ds_bands (signals)
@@ -220,36 +198,8 @@ class temp_lib:
         plt.xlabel('[m]')
         plt.colorbar()
         plt.show()
-    
-        pass
-
-    def cwt(self, w  = None, multiplier = None, plot = True, vmax = None):
-        '''
-        Computes the CWT of self._ds_band and plots the corresponding spectrogram
-        the cwt is multiplied by self._multiplier to ensure values > 1
-        '''
-        if vmax == None:
-            vmax = 0.1* self._multiplier
-        if w == None:
-            w = self._w
-        if multiplier != None:
-            self._multiplier = multiplier
-
-        w = 2.5 # scaling parameter for Morlet-based wavelet functions
-        fMx = 0.075 # fMax
-        d1f = np.linspace(1e-3,fMx, 200)
-        d1w = w*self._fs / (2*d1f*np.pi)
-        self._cwt = cwt(self._ds_band, morlet2, d1w, w=w)*self._multiplier
-        #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
-        self._d1f = d1f
-        if plot:
-            plt.figure(figsize = (14,4))
-            plt.pcolormesh(self._x, d1f, np.abs(self._cwt), cmap = 'viridis')
-            plt.colorbar()
-            plt.title("cwt")
-            plt.show()
-
-    def cwt_v2(self, sig_in, w  = None, multiplier = None, plot = True, vmax = None):
+        
+    def cwt(self, sig_in, w  = None, multiplier = None, plot = True, vmax = None):
         '''
         Computes the CWT of sig_in and plots the corresponding spectrogram
         the cwt is multiplied by self._multiplier to ensure values > 1
@@ -270,32 +220,26 @@ class temp_lib:
         d1cwt = cwt(sig_in, morlet2, d1w, w=w)*self._multiplier
         #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
         return d1cwt
-    def plot_cwt(self, cwt_plot):
+    def plot_cwt(self, cwt_plot, title = None, ylabel = None, vmax = None):
+        
         plt.figure(figsize = (16,4))
-        plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
-        plt.colorbar()
-        plt.title("cwt")
-        plt.xlabel("m")
-        plt.show()
-    def xwt(self, other, w = 10, vmax = None):
-        '''
-        Calculates and plots the cross wavelet transform of self._ds_band and other._ds_band
-        '''
         if vmax == None:
-            vmax = 0.3* self._multiplier
-
-        plt.figure(figsize = (15,4))
-
-        xwt = (self._cwt * np.conj(other._cwt))
-        self._xwt = xwt
-        plt.pcolormesh(self._x, self._d1f, np.abs(xwt), cmap = 'viridis',vmax = vmax)
+            plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis')
+        else:
+            plt.pcolormesh(self._x, self._d1f, np.abs(cwt_plot), cmap = 'viridis', vmax = vmax)
+            
         plt.colorbar()
-        plt.title("Spectrogram based on XWT")
+        
+        if title == None:
+            title = "Spectrogram"
+        if ylabel == None:
+            ylabel = "scale (s)"
+        plt.title(title)
         plt.xlabel("m")
-        plt.ylabel("scale (s)")
         plt.show()
+
     def simulate_shift(self, s = None):
-        '''Applies a shift s* sigma to self._ds_band'''
+        '''Applies a shift s* sigma to self._ds_band and returns it'''
         sigma = np.var(self._ds_band)
         return  np.copy(self._ds_band) + s*sigma*np.copy(self._ds_band)
 
@@ -315,53 +259,6 @@ class temp_lib:
         sim_deforst = np.copy(self._ds_band)
         sim_deforst[location[0]:location[1]] = np.copy(deforst)
         return sim_deforst   
-
-    def simulate_deforestation(self, location, mu = None, sigma = None, plot = True, n = None):
-        '''simulates deforestation
-        location: where the deforestation should take place
-        '''
-        if mu == None:
-            mu = 5e-2
-        if sigma == None:
-            sigma = np.var(self._ds_band)
-        location[0] = location[0] // self._s
-        location[1] = location[1] // self._s
-        length = location[1] - location[0]
-        deforst = (np.random.randn(length)*sigma + mu)
-        self._deforestated_band = np.copy(self._ds_band)
-        self._deforestated_band[location[0]:location[1]] = np.copy(deforst)
-        if n != None:
-            self.decrease_resolution(n = n, other = True)
-        if plot == True:
-            plt.figure(figsize = (12,5))
-            plt.title("dB of original band and with simulated deforestation")
-            plt.plot(self._x, np.log10(self._ds_band)*10)
-            plt.plot(self._x, np.log10(self._deforestated_band)*10)
-            plt.show()
-
-        w = 2.5 # scaling parameter for Morlet-based wavelet functions
-        fMx = 0.075 # fMax
-        d1f = np.linspace(1e-3,fMx, 200)
-        d1w = w*self._fs / (2*d1f*np.pi)
-        s_cwt = cwt(self._deforestated_band, morlet2, d1w, w=w)*self._multiplier
-
-        #self._cwt = cwt(self._ds_band, morlet2, widths, w = w) * self._multiplier
-        self._d1f = d1f
-        self.cwt(plot = True)
-        plt.figure(figsize = (15,4))
-        plt.pcolormesh(self._x, self._d1f, np.abs(s_cwt), cmap = 'viridis')
-        plt.colorbar()
-        plt.title("cwt deforest")
-        plt.show()
-        xwt = np.abs(self._cwt * np.conj(s_cwt))
-
-        if plot:
-            plt.figure(figsize = (15,4))
-            plt.pcolormesh(self._x, self._d1f, xwt, cmap = 'viridis', vmax = 0.3*self._multiplier)
-            plt.colorbar()
-            plt.title("Spectrogram based on XWT")
-            plt.show()
-
 
 ############
 # How to use cwt and xwt:
