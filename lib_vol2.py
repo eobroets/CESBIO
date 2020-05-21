@@ -63,19 +63,13 @@ class lib2:
         else:
             raise ValueError
 
-    def plot_image(self, other):
+    def plot_image(self):
+
         '''
         Plots the image in desibel using matplotlib
         '''
-        plt.figure(figsize = (12,9))
-        if other != None:
-            plt.subplot(2,2,1)
-        plt.title("Image")
+        plt.figure(figsize = (3,4))
         plt.pcolormesh(self._x, self._y, np.log10(self._image)*10, vmin = -40, vmax = 0)
-        if other != None:
-            plt.subplot(2,2,2)
-        plt.title("Image")
-        plt.pcolormesh(other._x, other._y, np.log10(other._image)*10, vmin = -40, vmax = 0)
         plt.show()
 
     def plot_section(self, other = None):
