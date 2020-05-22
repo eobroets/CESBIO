@@ -186,7 +186,7 @@ class lib2:
             prod = False
         if prod == True:
             plt.title("Spectrogram of the product between the two WFT")
-            plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z))
+            plt.pcolormesh(self._spectro_t,self._spectro_f,np.abs(self._spectro_Z * other._spectro_Z), vmax = vmax)
 
         plt.ylabel('frequency [Hz]')
         plt.xlabel('[m]')
@@ -230,6 +230,7 @@ class lib2:
             ylabel = "scale (s)"
         plt.title(title)
         plt.xlabel("m")
+        plt.ylabel(ylabel)
         plt.show()
 
     def simulate_shift(self, s = None):
